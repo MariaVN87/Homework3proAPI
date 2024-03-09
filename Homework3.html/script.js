@@ -22,6 +22,10 @@ async function fetchPhotos(numberPage, quantity) {
     }
 }
 
+function saveLikesToLocalStorage(photoId, likes) {
+    localStorage.setItem(`photo_${photoId}_likes`, likes);
+}
+
 function countUp(btn) {
     const countElement = btn.closest('.photo-gallery__item').querySelector('.count');
     const likedAttr = btn.getAttribute('data-liked');
@@ -29,6 +33,8 @@ function countUp(btn) {
     if (likedAttr !== 'true') {
         countElement.textContent = parseInt(countElement.textContent) + 1;
         btn.setAttribute('data-liked', 'true');
+        const photoId = btn.closest('.photo-gallery__item').dataset.photoId;
+        saveLikesToLocalStorage(photoId, countElement.textContent);
     }
 }
 
@@ -40,14 +46,17 @@ function countDown(btn) {
     if (likedAttr !== 'false') {
         countElement.textContent = parseInt(countElement.textContent) - 1;
         btn.setAttribute('data-liked', 'false');
+        const photoId = btn.closest('.photo-gallery__item').dataset.photoId;
+        saveLikesToLocalStorage(photoId, countElement.textContent);
     }
 }
 
 async function loadMorePhotos(quantityPhoto) {
     fetchPhotos(number, quantityPhoto).then((photos) => {
         photos.forEach(photo => {
+            let liked = localStorage.getItem(`photo_${photo.id}_liked`);
             photoGalleryTable.innerHTML += `
-        <div class="photo-gallery__item">
+        <div class="photo-gallery__item" data-photo-id="${photo.id}">
             <div class="photo-gallery__item-wrap">
                 <img class="photo-gallery__item-img" src="${photo.urls.small}">
             </div>
@@ -57,10 +66,9 @@ async function loadMorePhotos(quantityPhoto) {
                     <button id="up" class="fa fa-thumbs-up">Like</button> 
                     <button id="down" class="fa fa-thumbs-down">unLike</button> 
                 </div>
-                <div class="count">0</div>
+                <div class="count">${localStorage.getItem(`photo_${photo.id}_likes`) || 0} </div>
             </div>
-        </div>
-    `;
+        </div>`;
         });
         const likeBtn = photoGalleryTable.querySelectorAll('#up');
         const dislikeBtn = photoGalleryTable.querySelectorAll('#down');
